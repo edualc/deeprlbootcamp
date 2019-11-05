@@ -204,10 +204,18 @@ class DQN(object):
         # Hint: You may want to make use of the following fields: self._discount, self._q, self._qt
         # Hint2: Q-function can be called by self._q.forward(argument)
         # Hint3: You might also find https://docs.chainer.org/en/stable/reference/generated/chainer.functions.select_item.html useful
-        loss = C.Variable(np.array([0.]))  # TODO: replace this line
+        
         "*** YOUR CODE HERE ***"
-        return loss
 
+        inv_done = 1 - l_done
+        qt_values = self._qt.forward(l_next_obs)
+        y = l_rew + inv_done * self._discount * F.max(qt_values, axis=1)
+
+        q_values = self._q.forward(l_obs)
+        q = F.select_item(q_values, l_act)
+        
+        return F.mean_squared_error(y,q)
+        
     def compute_double_q_learning_loss(self, l_obs, l_act, l_rew, l_next_obs, l_done):
         """
         :param l_obs: A chainer variable holding a list of observations. Should be of shape N * |S|.
@@ -222,9 +230,19 @@ class DQN(object):
         # Hint: You may want to make use of the following fields: self._discount, self._q, self._qt
         # Hint2: Q-function can be called by self._q.forward(argument)
         # Hint3: You might also find https://docs.chainer.org/en/stable/reference/generated/chainer.functions.select_item.html useful
-        loss = C.Variable(np.array([0.]))  # TODO: replace this line
+        
         "*** YOUR CODE HERE ***"
-        return loss
+
+        next_action = F.argmax(self._q.forward(l_next_obs), axis=1)
+
+        qt_values = self._qt.forward(l_next_obs)
+        qt = F.select_item(qt_values, next_action)
+        y = l_rew + (1 - l_done) * self._discount * qt
+        
+        q_values = self._q.forward(l_obs)
+        q = F.select_item(q_values, l_act)
+
+        return F.mean_squared_error(y, q)
 
     def train_q(self, l_obs, l_act, l_rew, l_next_obs, l_done):
         """Update Q-value function by sampling from the replay buffer."""

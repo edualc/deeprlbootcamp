@@ -34,6 +34,14 @@ elif [[ $(uname) == 'Linux' ]]; then
         -ti dementrock/deeprlbootcamp \
           ${1-/bin/bash} "${@:2}"
     $xhost -local:root >/dev/null
+elif [[ $(uname) == 'MINGW64_NT-10.0' ]]; then
+    ip="your ip"
+    winpty  $docker run --rm \
+        -p $viskit_port:$viskit_port \
+        -e VISKIT_PORT=$viskit_port \
+        -e DISPLAY=$ip:0.0 \
+        -v /$DIR:/root/code/bootcamp_pg \
+        -ti dementrock/deeprlbootcamp
 else
     echo "This script only supports macOS or Linux"
 fi
