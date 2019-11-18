@@ -83,6 +83,16 @@ def compute_returns_advantages(rewards, dones, values, next_values, discount):
     As = np.zeros_like(rewards)
     "*** YOUR CODE HERE ***"
 
+    # code lehmacl1
+    T, N = rewards.shape
+    Rs = np.zeros((T+1, N))
+    As = np.zeros_like(rewards)
+    Rs[T] = next_values
+    for i in range(T-1, -1, -1):
+        Rs[i] = rewards[i] + (1-dones[i]) * discount * Rs[i+1]
+        As[i] = Rs[i] - values[i]
+
+    return Rs[:T], As
 
 def a2c(env, env_maker, policy, vf, joint_model=None, k=20, n_envs=16, discount=0.99,
         optimizer=chainer.optimizers.RMSprop(lr=1e-3), max_grad_norm=1.0, vf_loss_coeff=0.5,
@@ -217,6 +227,13 @@ def a2c(env, env_maker, policy, vf, joint_model=None, k=20, n_envs=16, discount=
                 vf_loss = Variable(np.array(0.))
                 total_loss = Variable(np.array(0.))
                 "*** YOUR CODE HERE ***"
+
+                # code lehmacl1
+                policy_loss = -F.mean(logli * all_advs) - ent_coeff * F.mean(ent)
+                vf_loss = F.mean_squared_error(all_returns, all_values)
+                total_loss = policy_loss + vf_loss_coeff * vf_loss
+
+
                 return policy_loss, vf_loss, total_loss
 
             test_once(compute_total_loss)
